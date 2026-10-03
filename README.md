@@ -28,20 +28,41 @@ A premium version is planned, which will offer additional subscription-based pai
 - Latest updates:
   - **[Modrinth](https://modrinth.com/plugin/grimac)** *(recommended)*
   - GitHub
-  artifacts: [Bukkit](https://nightly.link/GrimAnticheat/Grim/workflows/gradle-publish/2.0/grimac-bukkit.zip), [Fabric](https://nightly.link/GrimAnticheat/Grim/workflows/gradle-publish/2.0/grimac-fabric.zip) *(bleeding edge)*
+  artifacts: [Bukkit](https://nightly.link/GrimAnticheat/Grim/workflows/gradle-publish/2.0/grimac-bukkit.zip), [Fabric](https://nightly.link/GrimAnticheat/Grim/workflows/gradle-publish/2.0/grimac-fabric.zip), [Minestom](https://nightly.link/GrimAnticheat/Grim/workflows/gradle-publish/2.0/grimac-minestom.zip) *(bleeding edge)*
 - Major releases only:
   - ~~[Hangar](https://hangar.papermc.io/GrimAnticheat/GrimAnticheat)~~
   - ~~[SpigotMC](https://www.spigotmc.org/resources/grim-anticheat.99923/)~~
 
 ## Requirements & Installation
 
-- Java 17 or higher. *For more details, see [Updating-to-Java-17](https://github.com/GrimAnticheat/Grim/wiki/Updating-to-Java-17).*
-- A Spigot, Paper, Folia, or Fabric server environment. *For more details, see [Supported-environments](https://github.com/GrimAnticheat/Grim/wiki/Supported-environments).*
+- Java 17 or higher (Java 25 on Minestom). *For more details, see [Updating-to-Java-17](https://github.com/GrimAnticheat/Grim/wiki/Updating-to-Java-17).*
+- A Spigot, Paper, Folia, Fabric, or Minestom server environment. *For more details, see [Supported-environments](https://github.com/GrimAnticheat/Grim/wiki/Supported-environments).*
 
 If you use a proxy such as Velocity or BungeeCord:
 - If you use Geyser, Floodgate must be installed on the backend server (where Grim is) so Grim can access the Floodgate API.
 - If you use ViaVersion, it must be installed on the backend server (where Grim is) ONLY.
   Grim does not support having ViaVersion installed on the proxy, even if it is also installed on the backend.
+
+### Minestom
+
+Minestom has no plugin loader, so Grim ships as a library: add the `grimac-minestom` jar to your server's classpath
+and enable it after `MinecraftServer.init()` and before the server starts.
+
+```java
+MinecraftServer server = MinecraftServer.init();
+GrimMinestom.enable();
+server.start("0.0.0.0", 25565);
+```
+
+- The jar bundles PacketEvents and every other dependency except Minestom itself.
+- Configuration and data are stored in the `GrimAC` folder of the working directory. Use
+  `GrimMinestom.builder().dataFolder(path)` to change it.
+- Permissions are resolved through LuckPerms when it is on the classpath. Without it, permissions fall back to their
+  defaults, where operator-only permissions require permission level 4. Use
+  `GrimMinestom.builder().permissions(provider)` to plug in your own permission system.
+- Grim takes over Minestom's socket server on the first tick to process packets, so Mojang authentication, Velocity,
+  BungeeCord and compression keep working as configured.
+- Violation history needs a JDBC driver, such as `org.xerial:sqlite-jdbc`, on the classpath.
 
 ## Resources
 

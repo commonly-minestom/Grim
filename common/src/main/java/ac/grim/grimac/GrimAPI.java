@@ -76,6 +76,7 @@ public final class GrimAPI {
         if (ReflectionUtils.hasClass("io.papermc.paper.threadedregions.RegionizedServer")) return Platform.FOLIA;
         if (ReflectionUtils.hasClass("org.bukkit.Bukkit")) return Platform.BUKKIT;
         if (ReflectionUtils.hasClass("net.fabricmc.loader.api.FabricLoader")) return Platform.FABRIC;
+        if (ReflectionUtils.hasClass("net.minestom.server.MinecraftServer")) return Platform.MINESTOM;
         throw new IllegalStateException("Unknown platform!");
     }
 

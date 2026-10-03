@@ -85,5 +85,6 @@ include(":fabric:intermediary:mc1205")
 include(":fabric:intermediary:mc12111")
 include(":fabric:official")
 include(":fabric:official:mc261")
+include("minestom")
 
 if (file("workspace.gradle.kts").exists()) apply(from = "workspace.gradle.kts")

@@ -18,15 +18,19 @@ packetevents = "2.14.1+b1f9403-SNAPSHOT"
 placeholderapi = "2.11.6"
 viaversion = "5.9.0"
 luckperms = "5.5"
+minestom = "2026.09.12-26.2"
 
 # --- General Java Utilities ---
 fastutil = "8.5.15"
+guava = "33.7.2-jre"
 hikaricp = "7.0.2"
 slf4j = "2.0.17"
 jetbrains-annotations = "24.1.0"
 mongoDriverSync = "5.3.1"
 netty = "4.1.85.Final"
+netty-buffer = "4.1.138.Final"
 snakeyaml = "2.2"
+sqlite-jdbc = "3.53.4.0"
 configuralize = "1.4.1" # :slim classifier is applied in build.gradle.kts
 
 # --- Build & Tooling ---
@@ -38,6 +42,7 @@ spotless = "6.25.0"
 
 [libraries]
 # --- Core Frameworks: Adventure (Text) & Cloud (Commands) ---
+adventure-nbt = { group = "net.kyori", name = "adventure-nbt", version.ref = "adventure" }
 adventure-platform-bukkit = { group = "net.kyori", name = "adventure-platform-bukkit", version.ref = "adventure-platform-bukkit" }
 adventure-text-minimessage = { group = "net.kyori", name = "adventure-text-minimessage", version.ref = "adventure" }
 cloud-core = { group = "org.incendo", name = "cloud-core", version.ref = "cloud" }
@@ -50,6 +55,7 @@ cloud-processors-requirements = { group = "org.incendo", name = "cloud-processor
 paper-api = { group = "io.papermc.paper", name = "paper-api", version.ref = "paper-api" }
 placeholderapi = { group = "me.clip", name = "placeholderapi", version.ref = "placeholderapi" }
 luckperms = { group = "net.luckperms", name = "api", version.ref = "luckperms" }
+minestom = { group = "net.minestom", name = "minestom", version.ref = "minestom" }
 
 # --- Minecraft-Specific Libraries ---
 configuralize = { group = "github.scarsz", name = "configuralize", version.ref = "configuralize" }
@@ -62,6 +68,7 @@ grim-bukkit-internal = { group = "ac.grim.grimac", name = "grim-bukkit-internal"
 grim-fabric-internal = { group = "ac.grim.grimac", name = "grim-fabric-internal", version.ref = "grim-api" }
 packetevents-api = { group = "com.github.retrooper", name = "packetevents-api", version.ref = "packetevents" }
 packetevents-fabric = { group  = "com.github.retrooper", name = "packetevents-fabric", version.ref = "packetevents" }
+packetevents-netty-common = { group = "com.github.retrooper", name = "packetevents-netty-common", version.ref = "packetevents" }
 packetevents-fabric-common = { group = "com.github.retrooper", name = "packetevents-fabric-common", version.ref = "packetevents" }
 packetevents-spigot = { group = "com.github.retrooper", name = "packetevents-spigot", version.ref = "packetevents"}
 viaversion = { group = "com.viaversion", name = "viaversion", version.ref = "viaversion" }
@@ -69,12 +76,15 @@ viabackwards = { group = "com.viaversion", name = "viabackwards", version.ref = 
 
 # --- General Java Utilities ---
 fastutil = { group = "it.unimi.dsi", name = "fastutil", version.ref = "fastutil"}
+guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
 hikaricp = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikaricp" }
 slf4j-jdk14 = { group = "org.slf4j", name = "slf4j-jdk14", version.ref = "slf4j" }
 jetbrains-annotations = { group = "org.jetbrains", name = "annotations", version.ref = "jetbrains-annotations" }
 mongoDriverSync = { group = "org.mongodb", name = "mongodb-driver-sync", version.ref = "mongoDriverSync" }
 netty = { group = "io.netty", name = "netty-all", version.ref = "netty" }
+netty-buffer = { group = "io.netty", name = "netty-buffer", version.ref = "netty-buffer" }
 snakeyaml = { group = "org.yaml", name = "snakeyaml", version.ref = "snakeyaml" }
+sqlite-jdbc = { group = "org.xerial", name = "sqlite-jdbc", version.ref = "sqlite-jdbc" }
 
 # --- Build Tooling (Fabric) ---
 fabric-loader = { group = "net.fabricmc", name = "fabric-loader", version.ref = "fabric-loader" }

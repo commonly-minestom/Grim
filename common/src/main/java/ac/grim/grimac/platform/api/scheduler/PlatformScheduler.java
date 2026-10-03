@@ -1,5 +1,6 @@
 package ac.grim.grimac.platform.api.scheduler;
 
+import io.netty.channel.Channel;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.TimeUnit;
@@ -239,4 +240,8 @@ public interface PlatformScheduler {
      * @return The region task scheduler.
      */
     @NotNull RegionScheduler getRegionScheduler();
+
+    default void runOnConnection(@NotNull Object channel, @NotNull Runnable task, long delay, @NotNull TimeUnit timeUnit) {
+        ((Channel) channel).eventLoop().schedule(task, delay, timeUnit);
+    }
 }

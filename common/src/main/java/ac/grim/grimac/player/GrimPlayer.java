@@ -79,7 +79,6 @@ import com.viaversion.viaversion.api.protocol.ProtocolPathEntry;
 import com.viaversion.viaversion.api.protocol.packet.PacketTracker;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import io.github.retrooper.packetevents.adventure.serializer.legacy.LegacyComponentSerializer;
-import io.netty.channel.Channel;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.Object2DoubleArrayMap;
@@ -966,7 +965,7 @@ public class GrimPlayer implements GrimUser {
 
     public void runNettyTaskInMs(@NotNull Runnable runnable, int ms) {
         Objects.requireNonNull(runnable, "runnable");
-        ((Channel) user.getChannel()).eventLoop().schedule(runnable, ms, TimeUnit.MILLISECONDS);
+        GrimAPI.INSTANCE.getScheduler().runOnConnection(user.getChannel(), runnable, ms, TimeUnit.MILLISECONDS);
     }
 
     @Override

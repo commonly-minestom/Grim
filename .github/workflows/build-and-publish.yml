@@ -146,6 +146,13 @@ jobs:
                   path: ${{ github.workspace }}/fabric/build/libs/grimac-fabric-${{ env.BUILD_VERSION }}.jar
                   if-no-files-found: error
 
+            - name: Upload Minestom Artifact
+              uses: actions/upload-artifact@v6
+              with:
+                  name: grimac-minestom
+                  path: ${{ github.workspace }}/minestom/build/libs/grimac-minestom-${{ env.BUILD_VERSION }}.jar
+                  if-no-files-found: error
+
             #------------------------------------------------------------------
             #  Generate/Prepare Changelog
             #------------------------------------------------------------------
