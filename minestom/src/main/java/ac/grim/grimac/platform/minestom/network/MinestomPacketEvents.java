@@ -27,11 +27,13 @@ public final class MinestomPacketEvents extends PacketEventsAPI<GrimPlugin> {
     private static final String IDENTIFIER = "minestom";
 
     private final GrimPlugin plugin;
+    @Getter(AccessLevel.NONE)
+    private final ConnectionTransport transport = ConnectionTransport.detect();
     private final ServerManager serverManager = new MinestomServerManager();
     private final ProtocolManager protocolManager = new MinestomProtocolManager();
-    private final PlayerManager playerManager = new MinestomPlayerManager();
+    private final PlayerManager playerManager = new MinestomPlayerManager(transport);
     private final NettyManager nettyManager = new MinestomNettyManager();
-    private final ChannelInjector injector = new MinestomChannelInjector();
+    private final ChannelInjector injector = new MinestomChannelInjector(transport);
     @Getter(AccessLevel.NONE)
     private final EventListener<PlayerSpawnEvent> loginListener = EventListener.of(PlayerSpawnEvent.class, this::onSpawn);
     private boolean loaded;

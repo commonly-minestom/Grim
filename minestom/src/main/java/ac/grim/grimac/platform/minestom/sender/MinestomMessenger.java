@@ -1,7 +1,8 @@
 package ac.grim.grimac.platform.minestom.sender;
 
-import ac.grim.grimac.platform.minestom.network.MinestomConnection;
 import ac.grim.grimac.utils.anticheat.MessageUtil;
+import com.github.retrooper.packetevents.PacketEvents;
+import com.github.retrooper.packetevents.protocol.player.User;
 import io.github.retrooper.packetevents.adventure.serializer.legacy.LegacyComponentSerializer;
 import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.Component;
@@ -19,8 +20,9 @@ public class MinestomMessenger {
     }
 
     public static void send(Player player, Component message) {
-        if (player.getPlayerConnection() instanceof MinestomConnection connection) {
-            connection.user().sendMessage(message);
+        User user = PacketEvents.getAPI().getPlayerManager().getUser(player);
+        if (user != null) {
+            user.sendMessage(message);
             return;
         }
         player.sendMessage(LegacyComponentSerializer.legacySection().serialize(message));

@@ -1,22 +1,12 @@
 package ac.grim.grimac.platform.minestom.network;
 
 import com.github.retrooper.packetevents.PacketEvents;
-import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
-import com.github.retrooper.packetevents.exception.InvalidDisconnectPacketSend;
-import com.github.retrooper.packetevents.exception.PacketProcessException;
 import com.github.retrooper.packetevents.netty.buffer.ByteBufHelper;
 import com.github.retrooper.packetevents.protocol.player.User;
 import com.github.retrooper.packetevents.protocol.player.UserProfile;
-import com.github.retrooper.packetevents.settings.PacketEventsSettings;
-import com.github.retrooper.packetevents.util.ExceptionUtil;
 import com.github.retrooper.packetevents.util.PacketEventsImplHelper;
-import com.github.retrooper.packetevents.wrapper.PacketWrapper;
-import com.github.retrooper.packetevents.wrapper.configuration.server.WrapperConfigServerDisconnect;
-import com.github.retrooper.packetevents.wrapper.login.server.WrapperLoginServerDisconnect;
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerDisconnect;
 import io.netty.buffer.ByteBuf;
-import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.ServerFlag;
 import net.minestom.server.adventure.MinestomAdventure;
@@ -57,9 +47,8 @@ import java.util.function.BiFunction;
 import java.util.function.UnaryOperator;
 import java.util.zip.DataFormatException;
 
-public final class MinestomConnection extends PlayerSocketConnection {
+public final class MinestomConnection extends PlayerSocketConnection implements PacketChannel {
     private static final ListenerHandle<PlayerPacketOutEvent> OUTGOING = EventDispatcher.getHandle(PlayerPacketOutEvent.class);
-    private static final Component INVALID_PACKET = Component.text("Invalid packet");
     private static final int ENCRYPT_MODE = 1;
 
     private final ReentrantLock lock = new ReentrantLock();
@@ -75,12 +64,28 @@ public final class MinestomConnection extends PlayerSocketConnection {
         this.user = new User(this, com.github.retrooper.packetevents.protocol.ConnectionState.HANDSHAKING, null, new UserProfile(null, null));
     }
 
+    @Override
+    public PlayerSocketConnection connection() {
+        return this;
+    }
+
+    @Override
     public User user() {
         return user;
     }
 
-    void user(User user) {
+    @Override
+    public void user(User user) {
         this.user = user;
+    }
+
+    @Override
+    public @Nullable SocketAddress localAddress() {
+        try {
+            return getChannel().getLocalAddress();
+        } catch (IOException exception) {
+            return null;
+        }
     }
 
     @Override
@@ -135,7 +140,8 @@ public final class MinestomConnection extends PlayerSocketConnection {
         }
     }
 
-    void execute(Runnable task) {
+    @Override
+    public void execute(Runnable task) {
         mailbox.offer(task);
         if (closed) {
             runPendingTasks();
@@ -144,11 +150,13 @@ public final class MinestomConnection extends PlayerSocketConnection {
         signal();
     }
 
-    void flush() {
+    @Override
+    public void flush() {
         signal();
     }
 
-    void write(ByteBuf buffer, boolean silent) {
+    @Override
+    public void write(ByteBuf buffer, boolean silent) {
         if (lock.isHeldByCurrentThread()) {
             transmit(buffer, silent);
             return;
@@ -156,7 +164,8 @@ public final class MinestomConnection extends PlayerSocketConnection {
         execute(() -> transmit(buffer, silent));
     }
 
-    void read(ByteBuf buffer, ListenerScope scope) {
+    @Override
+    public void read(ByteBuf buffer, ListenerScope scope) {
         if (lock.isHeldByCurrentThread()) {
             inject(buffer, scope);
             return;
@@ -169,9 +178,9 @@ public final class MinestomConnection extends PlayerSocketConnection {
         try {
             ByteBuf buffer = scratch.copy(id, payload);
             try {
-                Verdict verdict = accept(buffer, ListenerScope.ALL);
-                if (verdict == Verdict.DROP) return null;
-                if (verdict == Verdict.REWRITE) {
+                PacketListeners.Verdict verdict = PacketListeners.receive(this, buffer, ListenerScope.ALL);
+                if (verdict == PacketListeners.Verdict.DROP) return null;
+                if (verdict == PacketListeners.Verdict.REWRITE) {
                     ByteBufHelper.readVarInt(buffer);
                     payload.readIndex(payload.writeIndex());
                     return serializer.read(scratch.view(buffer));
@@ -243,7 +252,7 @@ public final class MinestomConnection extends PlayerSocketConnection {
                 case BufferedPacket packet -> send(packet);
             };
         } catch (Throwable throwable) {
-            fail(throwable);
+            PacketListeners.fail(this, throwable);
             return false;
         }
     }
@@ -330,7 +339,7 @@ public final class MinestomConnection extends PlayerSocketConnection {
         try {
             if (!closed) transmit(buffer, silent, null, 0, 0);
         } catch (Throwable throwable) {
-            fail(throwable);
+            PacketListeners.fail(this, throwable);
         } finally {
             buffer.release();
         }
@@ -349,19 +358,19 @@ public final class MinestomConnection extends PlayerSocketConnection {
         }
         if (buffer.isReadable()) {
             boolean compressedFrame = MinecraftServer.getCompressionThreshold() > 0;
-            if (frame != null && untouched(preVia) && untouched(postVia) && outbound.accepts(compressedFrame)) {
+            if (frame != null && PacketListeners.untouched(preVia) && PacketListeners.untouched(postVia) && outbound.accepts(compressedFrame)) {
                 outbound.copy(frame, frameIndex, frameLength);
             } else {
                 outbound.frame(scratch.view(buffer));
             }
         }
-        runTasksAfterSend(preVia);
-        runTasksAfterSend(postVia);
+        PacketListeners.runTasksAfterSend(preVia);
+        PacketListeners.runTasksAfterSend(postVia);
     }
 
     private void inject(ByteBuf buffer, ListenerScope scope) {
         try {
-            if (closed || accept(buffer, scope) == Verdict.DROP) return;
+            if (closed || PacketListeners.receive(this, buffer, scope) == PacketListeners.Verdict.DROP) return;
             int id = ByteBufHelper.readVarInt(buffer);
             ClientPacket packet = MinecraftServer.getPacketParser().parse(getClientState(), id, scratch.view(buffer));
             Player player = getPlayer();
@@ -371,78 +380,10 @@ public final class MinestomConnection extends PlayerSocketConnection {
                 player.addPacketToQueue(packet);
             }
         } catch (Throwable throwable) {
-            fail(throwable);
+            PacketListeners.fail(this, throwable);
         } finally {
             buffer.release();
         }
-    }
-
-    private Verdict accept(ByteBuf buffer, ListenerScope scope) {
-        if (scope == ListenerScope.NONE) return Verdict.KEEP;
-        try {
-            User user = this.user;
-            Player player = getPlayer();
-            boolean rewritten = false;
-            if (scope == ListenerScope.ALL && PacketEvents.getAPI().getSettings().isPreViaInjection()) {
-                PacketReceiveEvent event = PacketEventsImplHelper.handleServerBoundPacket(this, user, player, buffer, false);
-                if (!buffer.isReadable()) return Verdict.DROP;
-                rewritten = event != null && event.getLastUsedWrapper() != null;
-            }
-            PacketReceiveEvent event = PacketEventsImplHelper.handleServerBoundPacket(this, user, player, buffer, true);
-            if (!buffer.isReadable()) return Verdict.DROP;
-            return rewritten || (event != null && event.getLastUsedWrapper() != null) ? Verdict.REWRITE : Verdict.KEEP;
-        } catch (Throwable throwable) {
-            fail(throwable);
-            return Verdict.DROP;
-        }
-    }
-
-    private void fail(Throwable throwable) {
-        if (ExceptionUtil.isException(throwable, InvalidDisconnectPacketSend.class)) return;
-        if (!ExceptionUtil.isException(throwable, PacketProcessException.class)) {
-            MinecraftServer.getExceptionManager().handleException(throwable);
-            disconnect();
-            return;
-        }
-        User user = this.user;
-        PacketEventsSettings settings = PacketEvents.getAPI().getSettings();
-        boolean handshaking = user.getDecoderState() == com.github.retrooper.packetevents.protocol.ConnectionState.HANDSHAKING;
-        if (settings.isDebugEnabled() || !handshaking) {
-            if (settings.isFullStackTraceEnabled()) {
-                PacketEvents.getAPI().getLogManager().warn("An error occurred while processing a packet of "
-                        + user.getName() + " (state: " + user.getDecoderState() + ", serverVersion: "
-                        + PacketEvents.getAPI().getServerManager().getVersion().getReleaseName() + ")", throwable);
-            } else {
-                PacketEvents.getAPI().getLogManager().warn(throwable.getMessage());
-            }
-        }
-        if (!settings.isKickOnPacketExceptionEnabled()) return;
-        PacketWrapper<?> packet = switch (user.getEncoderState()) {
-            case LOGIN -> new WrapperLoginServerDisconnect(INVALID_PACKET);
-            case CONFIGURATION -> new WrapperConfigServerDisconnect(INVALID_PACKET);
-            case PLAY -> new WrapperPlayServerDisconnect(INVALID_PACKET);
-            default -> null;
-        };
-        if (packet != null) user.sendPacket(packet);
-        disconnect();
-        if (user.getName() != null) {
-            PacketEvents.getAPI().getLogManager().warn("Disconnected " + user.getName() + " due to an invalid packet!");
-        }
-    }
-
-    private static void runTasksAfterSend(@Nullable PacketSendEvent event) {
-        if (event == null || !event.hasTasksAfterSend()) return;
-        for (Runnable task : event.getTasksAfterSend()) {
-            try {
-                task.run();
-            } catch (Throwable throwable) {
-                MinecraftServer.getExceptionManager().handleException(throwable);
-            }
-        }
-    }
-
-    private static boolean untouched(@Nullable PacketSendEvent event) {
-        return event == null || event.getLastUsedWrapper() == null;
     }
 
     private static ServerPacket translate(ServerPacket.ComponentHolding holder, Player player) {
@@ -457,11 +398,5 @@ public final class MinestomConnection extends PlayerSocketConnection {
     @SuppressWarnings("unchecked")
     private static PacketRegistry<ServerPacket> registry(ConnectionState state) {
         return (PacketRegistry<ServerPacket>) PacketVanilla.SERVER_PACKET_PARSER.stateRegistry(state);
-    }
-
-    private enum Verdict {
-        DROP,
-        KEEP,
-        REWRITE
     }
 }

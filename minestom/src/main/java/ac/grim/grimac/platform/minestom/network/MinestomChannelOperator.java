@@ -5,7 +5,6 @@ import com.github.retrooper.packetevents.netty.channel.ChannelOperator;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.UnpooledByteBufAllocator;
 
-import java.io.IOException;
 import java.net.SocketAddress;
 import java.util.List;
 
@@ -14,38 +13,34 @@ final class MinestomChannelOperator implements ChannelOperator {
 
     @Override
     public SocketAddress remoteAddress(Object channel) {
-        return connection(channel).getRemoteAddress();
+        return channel(channel).connection().getRemoteAddress();
     }
 
     @Override
     public SocketAddress localAddress(Object channel) {
-        try {
-            return connection(channel).getChannel().getLocalAddress();
-        } catch (IOException exception) {
-            return null;
-        }
+        return channel(channel).localAddress();
     }
 
     @Override
     public boolean isOpen(Object channel) {
-        return connection(channel).isOnline();
+        return channel(channel).connection().isOnline();
     }
 
     @Override
     public Object close(Object channel) {
-        connection(channel).disconnect();
+        channel(channel).connection().disconnect();
         return null;
     }
 
     @Override
     public Object write(Object channel, Object buffer) {
-        connection(channel).write((ByteBuf) buffer, false);
+        channel(channel).write((ByteBuf) buffer, false);
         return null;
     }
 
     @Override
     public Object flush(Object channel) {
-        connection(channel).flush();
+        channel(channel).flush();
         return null;
     }
 
@@ -56,13 +51,13 @@ final class MinestomChannelOperator implements ChannelOperator {
 
     @Override
     public Object fireChannelRead(Object channel, Object buffer) {
-        connection(channel).read((ByteBuf) buffer, ListenerScope.ALL);
+        channel(channel).read((ByteBuf) buffer, ListenerScope.ALL);
         return null;
     }
 
     @Override
     public Object writeInContext(Object channel, String ctx, Object buffer) {
-        connection(channel).write((ByteBuf) buffer, true);
+        channel(channel).write((ByteBuf) buffer, true);
         return null;
     }
 
@@ -79,7 +74,7 @@ final class MinestomChannelOperator implements ChannelOperator {
     @Override
     public Object fireChannelReadInContext(Object channel, String ctx, Object buffer) {
         boolean preVia = ctx.equals(PRE_VIA_PREFIX + PacketEvents.DECODER_NAME);
-        connection(channel).read((ByteBuf) buffer, preVia ? ListenerScope.POST_VIA : ListenerScope.NONE);
+        channel(channel).read((ByteBuf) buffer, preVia ? ListenerScope.POST_VIA : ListenerScope.NONE);
         return null;
     }
 
@@ -105,7 +100,7 @@ final class MinestomChannelOperator implements ChannelOperator {
 
     @Override
     public void runInEventLoop(Object channel, Runnable runnable) {
-        connection(channel).execute(runnable);
+        channel(channel).execute(runnable);
     }
 
     @Override
@@ -113,7 +108,7 @@ final class MinestomChannelOperator implements ChannelOperator {
         return UnpooledByteBufAllocator.DEFAULT.heapBuffer();
     }
 
-    private static MinestomConnection connection(Object channel) {
-        return (MinestomConnection) channel;
+    private static PacketChannel channel(Object channel) {
+        return (PacketChannel) channel;
     }
 }

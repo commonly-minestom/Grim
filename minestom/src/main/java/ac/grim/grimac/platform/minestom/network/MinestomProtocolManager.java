@@ -41,7 +41,7 @@ final class MinestomProtocolManager extends ProtocolManagerAbstract {
     @Override
     public void setUser(Object channel, User user) {
         users.put(channel, user);
-        ((MinestomConnection) channel).user(user);
+        ((PacketChannel) channel).user(user);
     }
 
     @Override
