@@ -24,6 +24,15 @@ repositories {
         }
     }
 
+    // ViaMinestom is not published anywhere yet, install it with its publishToMavenLocal task
+    exclusiveContent {
+        forRepository { mavenLocal() }
+        filter { includeModule("com.viaversion", "viaminestom") }
+    }
+    exclusive("https://repo.viaversion.com", { mavenContent { releasesOnly() } }) {
+        includeModule("com.viaversion", "viaversion")
+    }
+
     exclusive("https://nexus.scarsz.me/content/repositories/releases", { mavenContent { releasesOnly() } }) {
         includeGroup("github.scarsz")
     }
@@ -50,6 +59,10 @@ configurations.compileClasspath {
 dependencies {
     compileOnly(libs.minestom)
     compileOnly(libs.luckperms)
+    compileOnly(libs.viaversion)
+    compileOnly(libs.viaminestom) {
+        isTransitive = false
+    }
 
     implementation(project(":common"))
     implementation(libs.packetevents.api)

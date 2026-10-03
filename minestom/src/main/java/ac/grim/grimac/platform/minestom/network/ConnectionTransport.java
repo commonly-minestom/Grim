@@ -1,5 +1,6 @@
 package ac.grim.grimac.platform.minestom.network;
 
+import ac.grim.grimac.utils.reflection.ReflectionUtils;
 import net.minestom.server.network.player.PlayerConnection;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,6 +15,6 @@ interface ConnectionTransport {
     @Nullable PacketChannel channel(PlayerConnection connection);
 
     static ConnectionTransport detect() {
-        return new SocketTransport();
+        return ReflectionUtils.hasClass(ViaTransport.PROVIDER_CLASS) ? new ViaTransport() : new SocketTransport();
     }
 }

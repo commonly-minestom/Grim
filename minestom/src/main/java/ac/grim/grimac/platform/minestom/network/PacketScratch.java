@@ -76,6 +76,10 @@ final class PacketScratch {
         return view.index(offset + buffer.readerIndex(), offset + buffer.writerIndex());
     }
 
+    boolean owns(ByteBuf buffer) {
+        return buffer == this.buffer;
+    }
+
     void recycle(ByteBuf buffer) {
         if (buffer.refCnt() == 1 && buffer.capacity() <= RETAINED_CAPACITY) return;
         buffer.release();

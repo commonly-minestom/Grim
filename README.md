@@ -63,6 +63,16 @@ server.start("0.0.0.0", 25565);
 - Grim takes over Minestom's socket server on the first tick to process packets, so Mojang authentication, Velocity,
   BungeeCord and compression keep working as configured.
 - Violation history needs a JDBC driver, such as `org.xerial:sqlite-jdbc`, on the classpath.
+- With ViaMinestom on the classpath, Grim leaves the socket server alone and listens on its connections instead, both
+  before and after the packets are translated. Load ViaVersion before enabling Grim:
+
+  ```java
+  MinecraftServer server = MinecraftServer.init();
+  ViaMinestom via = ViaMinestom.create();
+  via.load();
+  GrimMinestom.enable();
+  via.start(server, "0.0.0.0", 25565);
+  ```
 
 ## Resources
 

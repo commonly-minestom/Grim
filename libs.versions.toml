@@ -73,6 +73,7 @@ packetevents-fabric-common = { group = "com.github.retrooper", name = "packeteve
 packetevents-spigot = { group = "com.github.retrooper", name = "packetevents-spigot", version.ref = "packetevents"}
 viaversion = { group = "com.viaversion", name = "viaversion", version.ref = "viaversion" }
 viabackwards = { group = "com.viaversion", name = "viabackwards", version.ref = "viaversion" }
+viaminestom = { group = "com.viaversion", name = "viaminestom", version = "1.0.0-SNAPSHOT" }
 
 # --- General Java Utilities ---
 fastutil = { group = "it.unimi.dsi", name = "fastutil", version.ref = "fastutil"}
