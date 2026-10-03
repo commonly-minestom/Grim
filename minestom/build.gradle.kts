@@ -44,10 +44,6 @@ java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(25))
 }
 
-val shadedTestRuntime by configurations.creating {
-    isCanBeConsumed = false
-}
-
 configurations.compileClasspath {
     resolutionStrategy.eachDependency {
         if (requested.group == "net.kyori" && requested.name.startsWith("adventure-")) {
@@ -72,15 +68,6 @@ dependencies {
     implementation(libs.adventure.nbt)
     implementation(libs.netty.buffer)
     implementation(libs.guava)
-
-    testImplementation(libs.minestom)
-    testImplementation(testlibs.junitJupiter)
-
-    shadedTestRuntime(libs.minestom)
-    shadedTestRuntime(testlibs.junitJupiter)
-    shadedTestRuntime(testlibs.junitPlatformLauncher)
-    shadedTestRuntime(libs.slf4j.jdk14)
-    shadedTestRuntime(libs.sqlite.jdbc)
 }
 
 publishing.publications.create<MavenPublication>("maven") {
@@ -135,11 +122,5 @@ tasks {
 
     assemble {
         dependsOn(shadowJar)
-    }
-
-    test {
-        useJUnitPlatform()
-        forkEvery = 1
-        classpath = files(shadowJar, sourceSets.test.get().output, shadedTestRuntime)
     }
 }
