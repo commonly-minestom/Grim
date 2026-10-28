@@ -17,17 +17,13 @@ repositories {
     }
     val grimLegacySnapshots = maven("https://repo.grim.ac/snapshots")
     exclusiveContent {
-        forRepositories(*listOfNotNull(localOverride, grimPublicReleases, grimPublicSnapshots, grimLegacySnapshots).toTypedArray())
+        // viaminestom is served by the Grim snapshots repo; mavenLocal is searched last for a locally installed build
+        forRepositories(*listOfNotNull(localOverride, grimPublicReleases, grimPublicSnapshots, grimLegacySnapshots, mavenLocal()).toTypedArray())
         filter {
             includeGroup("ac.grim.grimac")
             includeGroup("com.github.retrooper")
+            includeModule("com.viaversion", "viaminestom")
         }
-    }
-
-    // ViaMinestom is not published anywhere yet, install it with its publishToMavenLocal task
-    exclusiveContent {
-        forRepository { mavenLocal() }
-        filter { includeModule("com.viaversion", "viaminestom") }
     }
     exclusive("https://repo.viaversion.com", { mavenContent { releasesOnly() } }) {
         includeModule("com.viaversion", "viaversion")

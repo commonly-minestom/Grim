@@ -48,6 +48,7 @@ tmp/
 local.properties
 .loadpath
 .factorypath
+.omc/
 
 ##############################
 ## NetBeans
